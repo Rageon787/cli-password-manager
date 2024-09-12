@@ -28,11 +28,14 @@ enum Commands {
 #[derive(Args)]
 struct Add {
     service: Option<String>,
+    username: Option<String>,
+    password: Option<String>,
 }
 
 #[derive(Args)]
 struct Delete {
     service: Option<String>,
+    username: Option<String>,
 }
 
 #[derive(Args)]
@@ -73,13 +76,44 @@ fn generate_password(
     return password;
 }
 
+fn add_to_service(service: String, username: String, password: String) {}
+
 fn main() {
-    println!("{}", generate_password(true, false, true, false, 24));
     let cli = Cli::parse();
-    // match &cli.command {
-    //     Commands::Add => {}
-    //     Commands::Delete => {}
-    //     Commands::List => {}
-    //     Commands::Generate => {}
-    // }
+    match &cli.command {
+        Commands::Add(add) => match &add.service {
+            Some(service) => match &add.username {
+                Some(username) => match &add.password {
+                    Some(password) => {
+                        // add to (username, password) to service
+                        add_to_service(service, username, password);
+                    }
+                    None => {
+                        // Just create entry for service and username
+                    }
+                },
+                None => {
+                    // Just create an entry for service
+                }
+            },
+            None => {
+                // Print a help message
+                println!("Help for add");
+            }
+        },
+        Commands::Delete(delete) => match &delete.service {
+            Some(service) => println!("Service {}", service),
+            None => println!("No service entered"),
+        },
+        Commands::List(list) => match &list.service {
+            Some(service) => println!("Service {}", service),
+            None => println!("no service entered"),
+        },
+        Commands::Generate(generate) => {
+            println!(
+                "password is {}",
+                generate_password(true, true, true, true, 32)
+            );
+        }
+    }
 }
