@@ -43,6 +43,11 @@ struct List {
 #[derive(Args)]
 struct Generate {
     alpha: Option<String>,
+    numeric: Option<String>,
+    capital: Option<String>,
+    special: Option<String>,
+    length: Option<i32>,
+    copy: Option<String>,
 }
 
 // Helper Functions
@@ -53,23 +58,10 @@ fn generate_password(
     special: bool,
     length: usize,
 ) -> String {
-    let mut choices: Vec<usize> = Vec::new();
-
-    if alpha == true {
-        choices.push(0);
-    }
-
-    if capital == true {
-        choices.push(1);
-    }
-    if numeric == true {
-        choices.push(2);
-    }
-
-    if special == true {
-        choices.push(3);
-    }
-
+    let choices: Vec<usize> = [(alpha, 0), (numeric, 1), (capital, 2), (special, 3)]
+        .iter()
+        .filter_map(|&(condition, value)| if condition { Some(value) } else { None })
+        .collect();
     let mut rng = rand::thread_rng();
     let password = (0..length)
         .map(|_| {
@@ -82,5 +74,12 @@ fn generate_password(
 }
 
 fn main() {
-    let _cli = Cli::parse();
+    println!("{}", generate_password(true, false, true, false, 24));
+    let cli = Cli::parse();
+    // match &cli.command {
+    //     Commands::Add => {}
+    //     Commands::Delete => {}
+    //     Commands::List => {}
+    //     Commands::Generate => {}
+    // }
 }
