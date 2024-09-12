@@ -8,25 +8,42 @@ const NUMERALS: &[u8] = b"1234567890";
 const SPECIAL: &[u8] = b"!@#$%^&*()[]{}:;";
 const CHARSET: &[&[u8]] = &[LOWER_ALPHA, UPPER_ALPHA, NUMERALS, SPECIAL];
 
-// Command Structs
+// Commands
+#[derive(Parser)]
+#[command(version, about, long_about = None)]
+#[command(propagate_version = true)]
 struct Cli {
+    #[command(subcommand)]
     command: Commands,
 }
 
+#[derive(Subcommand)]
 enum Commands {
-    Add(add),
-    Delete(delete),
-    List(list),
-    Generate(generate),
+    Add(Add),
+    Delete(Delete),
+    List(List),
+    Generate(Generate),
 }
 
-struct Add {}
+#[derive(Args)]
+struct Add {
+    service: Option<String>,
+}
 
-struct Delete {}
+#[derive(Args)]
+struct Delete {
+    service: Option<String>,
+}
 
-struct List {}
+#[derive(Args)]
+struct List {
+    service: Option<String>,
+}
 
-struct Generate {}
+#[derive(Args)]
+struct Generate {
+    alpha: Option<String>,
+}
 
 // Helper Functions
 fn generate_password(
@@ -65,6 +82,5 @@ fn generate_password(
 }
 
 fn main() {
-    let res: String = generate_password(true, true, true, true, 24);
-    println!("{}", res);
+    let _cli = Cli::parse();
 }
