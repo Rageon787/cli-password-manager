@@ -32,10 +32,28 @@ struct Add {
     password: Option<String>,
 }
 
+impl Add {
+    fn print_fields(&self) {
+        println!("List: {:?}", self.service);
+        println!("List: {:?}", self.username);
+        println!("List: {:?}", self.password);
+    }
+    fn add_backend(args: &Add) {}
+}
+
 #[derive(Args)]
 struct Delete {
     service: Option<String>,
     username: Option<String>,
+}
+
+impl Delete {
+    fn print_fields(&self) {
+        println!("List: {:?}", self.service);
+        println!("List: {:?}", self.username);
+    }
+
+    fn delete_backend(args: &Delete) {}
 }
 
 #[derive(Args)]
@@ -43,17 +61,45 @@ struct List {
     service: Option<String>,
 }
 
-#[derive(Args)]
-struct Generate {
-    alpha: Option<String>,
-    numeric: Option<String>,
-    capital: Option<String>,
-    special: Option<String>,
-    length: Option<i32>,
-    copy: Option<String>,
+impl List {
+    fn print_fields(&self) {
+        println!("List: {:?}", self.service);
+    }
+    fn list_backend(args: &List) {}
 }
 
-// Helper Functions
+#[derive(Args)]
+struct Generate {
+    #[arg(short = 'a', long = "alpha", help = "Include alphabetic characters")]
+    alpha: bool,
+
+    #[arg(short = 'n', long = "numeric", help = "Include numeric characters")]
+    numeric: bool,
+
+    #[arg(short = 'C', long = "capital", help = "Include capital characters")]
+    capital: bool,
+
+    #[arg(short = 's', long = "special", help = "Include special characters")]
+    special: bool,
+
+    length: Option<i32>,
+
+    #[arg(short = 'c', long = "copy", help = "Copy to clipboard")]
+    copy: bool,
+}
+
+impl Generate {
+    fn print_fields(&self) {
+        println!("alpha: {:?}", self.alpha);
+        println!("numeric: {:?}", self.numeric);
+        println!("special: {:?}", self.special);
+        println!("length: {:?}", self.length);
+        println!("copy: {:?}", self.copy);
+    }
+
+    fn backend(&self) {}
+}
+
 fn generate_password(
     alpha: bool,
     capital: bool,
@@ -76,44 +122,12 @@ fn generate_password(
     return password;
 }
 
-fn add_to_service(service: String, username: String, password: String) {}
-
 fn main() {
     let cli = Cli::parse();
     match &cli.command {
-        Commands::Add(add) => match &add.service {
-            Some(service) => match &add.username {
-                Some(username) => match &add.password {
-                    Some(password) => {
-                        // add to (username, password) to service
-                        add_to_service(service, username, password);
-                    }
-                    None => {
-                        // Just create entry for service and username
-                    }
-                },
-                None => {
-                    // Just create an entry for service
-                }
-            },
-            None => {
-                // Print a help message
-                println!("Help for add");
-            }
-        },
-        Commands::Delete(delete) => match &delete.service {
-            Some(service) => println!("Service {}", service),
-            None => println!("No service entered"),
-        },
-        Commands::List(list) => match &list.service {
-            Some(service) => println!("Service {}", service),
-            None => println!("no service entered"),
-        },
-        Commands::Generate(generate) => {
-            println!(
-                "password is {}",
-                generate_password(true, true, true, true, 32)
-            );
-        }
+        Commands::Add(add) => add.print_fields(),
+        Commands::Delete(delete) => delete.print_fields(),
+        Commands::List(list) => list.print_fields(),
+        Commands::Generate(generate) => generate.print_fields(),
     }
 }
