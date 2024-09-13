@@ -1,5 +1,10 @@
 # RustPass 
-Presenting you my first ever personal project, A command line password manager written in rust.  
+RustPass is a command line password manager written in Rust and uses sqlite to store PBKDF2 AES encrypted passwords.
+
+This is my first personal project and was intended as a toy project for me to learn rust and get into the habit of making programming projects. 
+
+Please don't use this as your password manager! 
+
 ## Features
 - Add a new password for a service and multiple accounts.
 - Retrieve stored passwords for specific services and copy to them clipboard.
