@@ -1,7 +1,14 @@
+use aes::Aes256;
 use arboard::Clipboard;
+use block_modes::block_padding::Pkcs7;
+use block_modes::{BlockMode, Cbc};
 use clap::{Args, Parser, Subcommand};
+use hmac::Hmac;
+use pbkdf2::pbkdf2;
 use rand::Rng;
 use rusqlite::{Connection, Result};
+use std::num::NonZeroU32;
+
 // Constants
 const LOWER_ALPHA: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 const UPPER_ALPHA: &[u8] = b"ABCDEGHIJKLMNOPQRTSTUVWXYZ";
@@ -211,6 +218,17 @@ impl Generate {
 fn main() {
     let cli = Cli::parse();
     let conn = Connection::open_in_memory().expect("Could not create a connection");
+
+    let create_table = "CREATE TABLE IF NOT EXISTS manager(
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        service TEXT NOT NULL, 
+        username TEXT NOT NULL, 
+        password TEXT NOT NULL,  
+        UNIQUE(service, username)
+    )";
+
+    conn.execute(create_table, ())
+        .expect("Failed to create a table");
     match &cli.command {
         Commands::Add(add) => add.backend(&conn),
         Commands::Delete(delete) => delete.backend(&conn),
