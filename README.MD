@@ -1,4 +1,4 @@
-# RustPass: A simple CLI Password manager
+# RustPass 
 
 ## Features
 
