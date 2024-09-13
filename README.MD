@@ -9,7 +9,7 @@
 - Passwords are encrypted using AES-256 with the help of a PBKDF2 key derived from the master password. 
 
 ## Commands 
-- Add a password 
+**Add a password**  
 ```bash
 rust-pass add <username> <service> <password> 
 ``` 
