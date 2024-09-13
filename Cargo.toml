@@ -7,3 +7,4 @@ edition = "2021"
 arboard = "=3.4.1"
 clap = { version = "4.5.17", features = ["derive"] }
 rand = "0.8.4"
+rusqlite = "0.32.1"

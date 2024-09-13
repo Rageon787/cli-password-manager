@@ -1,7 +1,7 @@
 use arboard::Clipboard;
 use clap::{Args, Parser, Subcommand};
 use rand::Rng;
-
+use rusqlite::{Connection, Result};
 // Constants
 const LOWER_ALPHA: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 const UPPER_ALPHA: &[u8] = b"ABCDEGHIJKLMNOPQRTSTUVWXYZ";
@@ -39,9 +39,20 @@ impl Add {
         println!("List: {:?}", self.username);
         println!("List: {:?}", self.password);
     }
-    fn add_backend(args: &Add) {}
-}
 
+    fn backend(&self) {
+        match &self.service {
+            Some(service) => match &self.username {
+                Some(username) => match &self.password {
+                    Some(password) => todo!(),
+                    None => todo!(),
+                },
+                None => todo!(),
+            },
+            None => todo!(),
+        };
+    }
+}
 #[derive(Args)]
 struct Delete {
     service: Option<String>,
@@ -54,7 +65,15 @@ impl Delete {
         println!("List: {:?}", self.username);
     }
 
-    fn delete_backend(args: &Delete) {}
+    fn backend(&self) {
+        match &self.username {
+            Some(username) => match &self.service {
+                Some(service) => todo!(),
+                None => todo!(), // return an error
+            },
+            None => todo!(), // print a help message
+        }
+    }
 }
 
 #[derive(Args)]
@@ -66,7 +85,12 @@ impl List {
     fn print_fields(&self) {
         println!("List: {:?}", self.service);
     }
-    fn list_backend(args: &List) {}
+    fn backend(&self) {
+        match &self.service {
+            Some(service) => todo!(), // print every username associated with this service
+            None => todo!(),          // print every service and their usernames
+        }
+    }
 }
 
 #[derive(Args)]
