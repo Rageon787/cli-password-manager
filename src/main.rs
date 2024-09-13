@@ -17,11 +17,9 @@ const UPPER_ALPHA: &[u8] = b"ABCDEGHIJKLMNOPQRTSTUVWXYZ";
 const NUMERALS: &[u8] = b"1234567890";
 const SPECIAL: &[u8] = b"!@#$%^&*()[]{}:;";
 const CHARSET: &[&[u8]] = &[LOWER_ALPHA, UPPER_ALPHA, NUMERALS, SPECIAL];
-const MASTER_USERNAME: &str = "masterusername";
 const MASTER_PASSWORD: &str = "masterpassword";
-const PBKDF2_ITERATIONS: u32 = 100000; // 100k iterations
-
 // Commands
+
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
 #[command(propagate_version = true)]
@@ -79,7 +77,7 @@ impl Add {
                             "DELETE FROM manager WHERE service =?1 AND username = ?2";
 
                         let insert_new =
-                            "INSERT INTO manager (service, username, password) VALUES(?1, ?2, ?3)";
+                            "INSERT INTO manager (service, username, salt, iv, password) VALUES(?1, ?2, ?3, ?4, ?5)";
                         let entry_exists: i32 = conn
                             .query_row(check_existing, (service, username), |row| row.get(0))
                             .expect("Failed to check if entry exists");
@@ -88,7 +86,12 @@ impl Add {
                             conn.execute(delete_existing, (service, username))
                                 .expect("Failed to delete existing entry");
                         }
-                        match conn.execute(insert_new, (service, username, password)) {
+
+                        let (salt, iv, encrypted_password) = encrypt(MASTER_PASSWORD, password);
+                        match conn.execute(
+                            insert_new,
+                            (service, username, salt, iv, encrypted_password),
+                        ) {
                             Ok(_) => println!("Insertion successful"),
                             Err(e) => eprintln!("Failed to insert into table: {}", e),
                         }
@@ -226,7 +229,7 @@ fn generate_salt() -> Vec<u8> {
     return salt;
 }
 fn derive_key(master_password: &str, salt: &[u8]) -> Vec<u8> {
-    let mut key = vec![0u8; 20];
+    let mut key = vec![0u8; 32];
     pbkdf2_hmac::<Sha256>(master_password.as_bytes(), salt, 100_000, &mut key);
     return key;
 }
@@ -254,7 +257,9 @@ fn main() {
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         service TEXT NOT NULL, 
         username TEXT NOT NULL, 
-        password TEXT NOT NULL,  
+        salt BLOB NOT NULL, 
+        iv BLOB NOT NULL,
+        password BLOB NOT NULL,  
         UNIQUE(service, username)
     )";
 
