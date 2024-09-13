@@ -8,7 +8,8 @@ const UPPER_ALPHA: &[u8] = b"ABCDEGHIJKLMNOPQRTSTUVWXYZ";
 const NUMERALS: &[u8] = b"1234567890";
 const SPECIAL: &[u8] = b"!@#$%^&*()[]{}:;";
 const CHARSET: &[&[u8]] = &[LOWER_ALPHA, UPPER_ALPHA, NUMERALS, SPECIAL];
-
+const MASTER_USERNAME: &str = "masterusername";
+const MASTER_PASSWORD: &str = "masterpassword";
 // Commands
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -24,8 +25,23 @@ enum Commands {
     Delete(Delete),
     List(List),
     Generate(Generate),
+    Retrieve(Retrieve),
 }
 
+#[derive(Args)]
+struct Retrieve {
+    service: Option<String>,
+    username: Option<String>,
+}
+
+impl Retrieve {
+    fn print_fields(&self) {
+        println!("List: {:?}", self.service);
+        println!("List: {:?}", self.username);
+    }
+
+    fn backend(&self, conn: &Connection) {}
+}
 #[derive(Args)]
 struct Add {
     service: Option<String>,
@@ -203,5 +219,6 @@ fn main() {
             let res = generate.backend();
             println!("{}", res);
         }
+        Commands::Retrieve(retrieve) => retrieve.print_fields(),
     }
 }
