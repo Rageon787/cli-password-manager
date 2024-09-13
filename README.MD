@@ -1,5 +1,5 @@
 # RustPass 
-
+Presenting you my first ever personal project, A command line password manager written in rust.  
 ## Features
 - Add a new password for a service and multiple accounts.
 - Retrieve stored passwords for specific services and copy to them clipboard.
