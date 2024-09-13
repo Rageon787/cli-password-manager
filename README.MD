@@ -14,4 +14,21 @@
 rust-pass add <username> <service> <password> 
 ``` 
 - Generate a password 
+```bash
+rust-pass generate [-a | --alpha] [-n | --numeric] [-s | --special] [-C | --capital] [length] [-c | --copy] 
+```
+
+- Retrieve a password 
+```bash 
+rust-pass retrieve <username> <service> <password> [-c | --copy] 
+```
+
+- Delete a stored password 
+```bash 
+rust-pass delete <username> <service> 
+```
+
+- List all services or all accounts within a service
+```bash
+rust-pass list [service] 
 ```
