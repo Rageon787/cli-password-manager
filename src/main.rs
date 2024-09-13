@@ -40,17 +40,38 @@ impl Add {
         println!("List: {:?}", self.password);
     }
 
-    fn backend(&self) {
+    fn backend(&self, conn: &Connection) {
         match &self.service {
             Some(service) => match &self.username {
                 Some(username) => match &self.password {
-                    Some(password) => todo!(),
-                    None => todo!(),
+                    Some(password) => {
+                        let check_existing =
+                            "SELECT COUNT(*) FROM manager WHERE service = ?1 AND username = ?2";
+
+                        let delete_existing =
+                            "DELETE FROM manager WHERE service =?1 AND username = ?2";
+
+                        let insert_new =
+                            "INSERT INTO manager (service, username, password) VALUES(?1, ?2, ?3)";
+                        let entry_exists: i32 = conn
+                            .query_row(check_existing, (service, username), |row| row.get(0))
+                            .expect("Failed to check if entry exists");
+
+                        if entry_exists > 0 {
+                            conn.execute(delete_existing, (service, username))
+                                .expect("Failed to delete existing entry");
+                        }
+                        match conn.execute(insert_new, (service, username, password)) {
+                            Ok(_) => println!("Insertion successful"),
+                            Err(e) => eprintln!("Failed to insert into table: {}", e),
+                        }
+                    }
+                    None => eprintln!("Password is missing"),
                 },
-                None => todo!(),
+                None => eprintln!("Username is missing"),
             },
-            None => todo!(),
-        };
+            None => eprintln!("Service is missing"),
+        }
     }
 }
 #[derive(Args)]
@@ -65,7 +86,7 @@ impl Delete {
         println!("List: {:?}", self.username);
     }
 
-    fn backend(&self) {
+    fn backend(&self, conn: &Connection) {
         match &self.username {
             Some(username) => match &self.service {
                 Some(service) => todo!(),
@@ -85,7 +106,7 @@ impl List {
     fn print_fields(&self) {
         println!("List: {:?}", self.service);
     }
-    fn backend(&self) {
+    fn backend(&self, conn: &Connection) {
         match &self.service {
             Some(service) => todo!(), // print every username associated with this service
             None => todo!(),          // print every service and their usernames
@@ -122,7 +143,7 @@ impl Generate {
         println!("copy: {:?}", self.copy);
     }
 
-    fn generate_password(&self) -> String {
+    fn backend(&self) -> String {
         let choices: Vec<usize> = [
             (self.alpha, 0),
             (self.capital, 1),
@@ -157,12 +178,13 @@ impl Generate {
 
 fn main() {
     let cli = Cli::parse();
+    let conn = Connection::open_in_memory().expect("Could not create a connection");
     match &cli.command {
-        Commands::Add(add) => add.print_fields(),
-        Commands::Delete(delete) => delete.print_fields(),
-        Commands::List(list) => list.print_fields(),
+        Commands::Add(add) => add.backend(&conn),
+        Commands::Delete(delete) => delete.backend(&conn),
+        Commands::List(list) => list.backend(&conn),
         Commands::Generate(generate) => {
-            let res = generate.generate_password();
+            let res = generate.backend();
             println!("{}", res);
         }
     }
