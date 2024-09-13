@@ -239,6 +239,13 @@ fn encrypt(master_password: &str, password: &str) -> (Vec<u8>, Vec<u8>, Vec<u8>)
     let encrypted_password = cipher.encrypt_vec(password.as_bytes());
     return (salt, iv, encrypted_password);
 }
+
+fn decrypt(master_password: &str, salt: &[u8], iv: &[u8], encrypted_password: &[u8]) -> String {
+    let key = derive_key(master_password, salt);
+    let cipher = Aes256Cbc::new_from_slices(&key, &iv).unwrap();
+    let decrypted_password = cipher.decrypt_vec(encrypted_password).unwrap();
+    return String::from_utf8(decrypted_password).unwrap();
+}
 fn main() {
     let cli = Cli::parse();
     let conn = Connection::open_in_memory().expect("Could not create a connection");
