@@ -87,12 +87,28 @@ impl Delete {
     }
 
     fn backend(&self, conn: &Connection) {
-        match &self.username {
-            Some(username) => match &self.service {
-                Some(service) => todo!(),
-                None => todo!(), // return an error
+        match &self.service {
+            Some(service) => match &self.username {
+                Some(username) => {
+                    let check_existing = "SELECT COUNT(*) WHERE service = ?1 AND username = ?2";
+                    let entry_exists: i32 = conn
+                        .query_row(check_existing, (service, username), |row| row.get(0))
+                        .expect("Failed to check if entry exists");
+
+                    if entry_exists > 0 {
+                        let delete_existing =
+                            "DELETE FROM manager WHERE service = ?1 AND username =?2";
+                        match conn.execute(delete_existing, (service, username)) {
+                            Ok(_) => println!("Deletion successful"),
+                            Err(e) => println!("Failed to delete: {}", e),
+                        }
+                    } else {
+                        println!("errrr")
+                    }
+                }
+                None => eprintln!("Errr"),
             },
-            None => todo!(), // print a help message
+            None => eprintln!("errr"),
         }
     }
 }
