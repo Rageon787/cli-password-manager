@@ -49,7 +49,36 @@ impl Retrieve {
         println!("List: {:?}", self.username);
     }
 
-    fn backend(&self, conn: &Connection) {}
+    fn backend(&self, conn: &Connection) {
+        match &self.service {
+            Some(service) => match &self.username {
+                Some(username) => {
+                    let check_existing =
+                        "SELECT COUNT(*) FROM manager WHERE service = ?1 AND username = ?2";
+                    let entry_exists: i32 = conn
+                        .query_row(check_existing, (service, username), |row| row.get(0))
+                        .expect("Failed to check if entry exists");
+                    if entry_exists > 0 {
+                        let retrieve_entry =
+                            "SELECT salt, iv, password FROM manager WHERE service = ?1 AND username = ?2";
+                        let (salt, iv, encrypted_password) = conn
+                            .query_row(retrieve_entry, (service, username), |row| {
+                                let salt: Vec<u8> = row.get(0)?;
+                                let iv: Vec<u8> = row.get(1)?;
+                                let password: Vec<u8> = row.get(2)?;
+                                Ok((salt, iv, password))
+                            })
+                            .expect("Failed to find entry");
+                        let password: String =
+                            decrypt(MASTER_PASSWORD, &salt, &iv, &encrypted_password);
+                        println!("Password: {}", password);
+                    }
+                }
+                None => println!("Err"),
+            },
+            None => println!("Err"),
+        }
+    }
 }
 #[derive(Args)]
 struct Add {
@@ -251,8 +280,8 @@ fn decrypt(master_password: &str, salt: &[u8], iv: &[u8], encrypted_password: &[
 }
 fn main() {
     let cli = Cli::parse();
-    let conn = Connection::open_in_memory().expect("Could not create a connection");
-
+    let path = "test.db";
+    let conn = Connection::open(path).expect("Failed to connect to the database");
     let create_table = "CREATE TABLE IF NOT EXISTS manager(
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         service TEXT NOT NULL, 
@@ -273,6 +302,6 @@ fn main() {
             let res = generate.backend();
             println!("{}", res);
         }
-        Commands::Retrieve(retrieve) => retrieve.print_fields(),
+        Commands::Retrieve(retrieve) => retrieve.backend(&conn),
     }
 }
