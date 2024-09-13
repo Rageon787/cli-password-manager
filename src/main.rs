@@ -1,14 +1,16 @@
-use aes::Aes256;
+use aes::{Aes128, Aes256};
 use arboard::Clipboard;
 use block_modes::block_padding::Pkcs7;
 use block_modes::{BlockMode, Cbc};
 use clap::{Args, Parser, Subcommand};
 use hmac::Hmac;
-use pbkdf2::pbkdf2;
+use pbkdf2::{pbkdf2_hmac, pbkdf2_hmac_array};
 use rand::Rng;
 use rusqlite::{Connection, Result};
+use sha2::{Digest, Sha256};
 use std::num::NonZeroU32;
 
+type Aes256Cbc = Cbc<Aes256, Pkcs7>;
 // Constants
 const LOWER_ALPHA: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 const UPPER_ALPHA: &[u8] = b"ABCDEGHIJKLMNOPQRTSTUVWXYZ";
@@ -17,6 +19,8 @@ const SPECIAL: &[u8] = b"!@#$%^&*()[]{}:;";
 const CHARSET: &[&[u8]] = &[LOWER_ALPHA, UPPER_ALPHA, NUMERALS, SPECIAL];
 const MASTER_USERNAME: &str = "masterusername";
 const MASTER_PASSWORD: &str = "masterpassword";
+const PBKDF2_ITERATIONS: u32 = 100000; // 100k iterations
+
 // Commands
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -215,6 +219,26 @@ impl Generate {
     }
 }
 
+// Cryptographic functions
+
+fn generate_salt() -> Vec<u8> {
+    let salt: Vec<u8> = (0..16).map(|_| rand::thread_rng().gen()).collect();
+    return salt;
+}
+fn derive_key(master_password: &str, salt: &[u8]) -> Vec<u8> {
+    let mut key = vec![0u8; 20];
+    pbkdf2_hmac::<Sha256>(master_password.as_bytes(), salt, 100_000, &mut key);
+    return key;
+}
+
+fn encrypt(master_password: &str, password: &str) -> (Vec<u8>, Vec<u8>, Vec<u8>) {
+    let salt = generate_salt();
+    let key = derive_key(master_password, &salt);
+    let iv: Vec<u8> = (0..16).map(|_| rand::thread_rng().gen()).collect();
+    let cipher = Aes256Cbc::new_from_slices(&key, &iv).unwrap();
+    let encrypted_password = cipher.encrypt_vec(password.as_bytes());
+    return (salt, iv, encrypted_password);
+}
 fn main() {
     let cli = Cli::parse();
     let conn = Connection::open_in_memory().expect("Could not create a connection");
