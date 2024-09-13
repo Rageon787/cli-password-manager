@@ -1,4 +1,17 @@
-# CLI-Password manager 
+# RustPass: A simple CLI Password manager
 
-This project has been inspired by pass, a command line password manager for unix systems which uses GPG encryption / decryption to store passwords. 
+## Features
+
+	•	Add a new password for a service and multiple accounts.
+	•	Retrieve stored passwords for specific services.
+	•	Update existing passwords
+	•	Delete stored passwords
+	•	List all services or accounts associated with a particular service
+	•	Passwords are encrypted using AES-256 with the help of a PBKDF2 key derived from the master password 
+
+## Commands 
+- Add a password 
+```bash
+rust-pass add <username> <service> <password> 
+```
 
