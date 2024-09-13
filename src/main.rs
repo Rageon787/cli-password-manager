@@ -1,3 +1,4 @@
+use arboard::Clipboard;
 use clap::{Args, Parser, Subcommand};
 use rand::Rng;
 
@@ -97,29 +98,37 @@ impl Generate {
         println!("copy: {:?}", self.copy);
     }
 
-    fn backend(&self) {}
-}
-
-fn generate_password(
-    alpha: bool,
-    capital: bool,
-    numeric: bool,
-    special: bool,
-    length: usize,
-) -> String {
-    let choices: Vec<usize> = [(alpha, 0), (numeric, 1), (capital, 2), (special, 3)]
+    fn generate_password(&self) -> String {
+        let choices: Vec<usize> = [
+            (self.alpha, 0),
+            (self.capital, 1),
+            (self.numeric, 2),
+            (self.special, 3),
+        ]
         .iter()
         .filter_map(|&(condition, value)| if condition { Some(value) } else { None })
         .collect();
-    let mut rng = rand::thread_rng();
-    let password = (0..length)
-        .map(|_| {
-            let i = rng.gen_range(0..choices.len());
-            let j = rng.gen_range(0..CHARSET[i].len());
-            CHARSET[choices[i]][j] as char
-        })
-        .collect();
-    return password;
+
+        let length = match self.length {
+            Some(length) => length,
+            None => 12,
+        };
+
+        let mut rng = rand::thread_rng();
+        let password = (0..length)
+            .map(|_| {
+                let i = rng.gen_range(0..choices.len());
+                let j = rng.gen_range(0..CHARSET[choices[i]].len());
+                CHARSET[choices[i]][j] as char
+            })
+            .collect();
+
+        if self.copy {
+            let mut clipboard = Clipboard::new().unwrap();
+            clipboard.set_text(&password);
+        }
+        return password;
+    }
 }
 
 fn main() {
@@ -128,6 +137,9 @@ fn main() {
         Commands::Add(add) => add.print_fields(),
         Commands::Delete(delete) => delete.print_fields(),
         Commands::List(list) => list.print_fields(),
-        Commands::Generate(generate) => generate.print_fields(),
+        Commands::Generate(generate) => {
+            let res = generate.generate_password();
+            println!("{}", res);
+        }
     }
 }
